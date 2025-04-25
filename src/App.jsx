@@ -1,11 +1,11 @@
+// src/App.jsx (Updated with fetch debugging)
 import React, { useState, useEffect, useCallback } from 'react';
 import io from 'socket.io-client';
-import TokenChart from './TokenChart'; // Import the new chart component
+import TokenChart from './TokenChart';
 import './App.css';
 
-// --- Configuration ---
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-const TOP_N_TOKENS_TO_DISPLAY = 20; // How many tokens to show in the chart
+const TOP_N_TOKENS_TO_DISPLAY = 30;
 
 function App() {
   const [tokenCounts, setTokenCounts] = useState([]);
@@ -13,52 +13,76 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- Fetch Initial Data ---
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     const apiUrl = `${BACKEND_URL}/api/token-counts`;
-    console.log(`Fetching initial data from: ${apiUrl}`);
+    console.log(`Fetching initial data from: ${apiUrl}`); // Log the URL being fetched
+
     try {
       const response = await fetch(apiUrl);
+      console.log(`Fetch response status: ${response.status}, ok: ${response.ok}`); // Log status
+
+      // --- Debugging Step 1: Log Response Headers (Optional but useful for CORS) ---
+      // Convert Headers object to a plain object for easier logging
+      const headers = {};
+      response.headers.forEach((value, key) => {
+          headers[key] = value;
+      });
+      console.log("Response Headers:", headers);
+      // Check specifically for CORS header
+      console.log("Access-Control-Allow-Origin Header:", response.headers.get('access-control-allow-origin'));
+
+
       if (!response.ok) {
-        const errorBody = await response.text(); // Get more error details
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+        // Try to get text even for errors, might contain clues
+        const errorBody = await response.text().catch(() => 'Could not read error body');
+        console.error(`Fetch failed! Status: ${response.status}, Body: ${errorBody}`);
+        throw new Error(`HTTP error! status: ${response.status}`); // Simpler error for display
       }
+
+      // --- Debugging Step 2: Log Raw Response Body ---
+      // Clone the response before reading body as text, so it can be read again for JSON
+      const clonedResponse = response.clone();
+      const responseText = await clonedResponse.text();
+      console.log("Raw response text received:", responseText); // <<< SEE WHAT THIS SAYS
+
+      // --- Debugging Step 3: Attempt JSON Parsing ---
+      // Now parse the original response as JSON
       const data = await response.json();
-       // Ensure data is an array before sorting/setting
+      console.log("Parsed JSON data:", data); // Log parsed data
+
       if (!Array.isArray(data)) {
+          console.error("Parsed data is not an array:", data);
           throw new Error("Invalid data format received from API.");
       }
       console.log(`Received ${data.length} initial token counts.`);
       data.sort((a, b) => b.mint_count - a.mint_count);
       setTokenCounts(data);
+
     } catch (err) {
-      console.error("Failed to fetch initial data:", err);
-      setError(`Could not load initial token data: ${err.message}. Please try refreshing.`);
+      // Catch errors from fetch, text(), json(), or thrown errors
+      console.error("Failed during fetch or parsing:", err);
+      // Provide more context in the UI error message
+      setError(`Could not load initial token data. ${err.message}. Check browser console/network tab.`);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // --- Effect for Initial Data Fetch ---
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // --- Effect for WebSocket Connection ---
   useEffect(() => {
     console.log('Setting up WebSocket connection...');
-    const socket = io(BACKEND_URL, {
-        // Optional: Add reconnection options if needed
-        // reconnectionAttempts: 5,
-        // reconnectionDelay: 1000,
-    });
+    const socket = io(BACKEND_URL); // Removed extra options for simplicity
 
     socket.on('connect', () => {
       console.log('WebSocket connected:', socket.id);
       setIsConnected(true);
-      setError(null);
+      // Clear error *only* if it was a connection error previously
+      setError(prevError => prevError?.includes('Could not connect') ? null : prevError);
     });
 
     socket.on('disconnect', (reason) => {
@@ -69,9 +93,8 @@ function App() {
     socket.on('connect_error', (err) => {
       console.error('WebSocket connection error:', err.message);
       setIsConnected(false);
-      // Don't overwrite fetch errors if already present
-      if (!error) {
-          setError(`Could not connect to real-time updates (${err.message}). Backend might be down.`);
+      if (!error) { // Don't overwrite existing fetch errors
+          setError(`Could not connect to real-time updates (${err.message}).`);
       }
     });
 
@@ -80,15 +103,11 @@ function App() {
       setTokenCounts(prevCounts => {
         const existingIndex = prevCounts.findIndex(t => t.tokenId === updatedToken.tokenId);
         let newCounts = [...prevCounts];
-
         if (existingIndex !== -1) {
           newCounts[existingIndex] = { ...newCounts[existingIndex], mint_count: updatedToken.mint_count };
         } else {
-          // Only add if it wasn't there before
           newCounts.push(updatedToken);
         }
-
-        // Re-sort the list after update/add
         newCounts.sort((a, b) => b.mint_count - a.mint_count);
         return newCounts;
       });
@@ -99,7 +118,7 @@ function App() {
       socket.disconnect();
       setIsConnected(false);
     };
-  }, [error]); // Re-run if error changes (e.g., to clear connection error message)
+  }, [error]); // Dependency array includes error
 
   return (
     <div className="App">
@@ -110,18 +129,14 @@ function App() {
         </div>
         {error && <p className="error-message">{error}</p>}
       </header>
-
       <main>
         {isLoading ? (
           <p>Loading initial token counts...</p>
         ) : (
-           // Use a container for the chart
            <div className="chart-container">
              {tokenCounts.length > 0 ? (
-               // Render the chart component, passing the data and how many items to show
                <TokenChart tokenData={tokenCounts} topN={TOP_N_TOKENS_TO_DISPLAY} />
              ) : (
-               // Show message if there's no data after loading (and no error)
                !error && <p>No token data available yet.</p>
              )}
            </div>
