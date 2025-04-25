@@ -1,4 +1,4 @@
-// src/TokenChart.jsx
+// src/TokenChart.jsx (Updated with datalabels)
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -10,22 +10,24 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+// Import the datalabels plugin
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
-// Register Chart.js components
+// Register Chart.js components AND the datalabels plugin
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels // Register the plugin
 );
 
 // Component to display the token counts as a bar chart
 function TokenChart({ tokenData = [], topN = 20 }) {
 
   // Prepare data for the chart
-  // Take only the top N tokens based on the already sorted data
   const chartLabels = tokenData.slice(0, topN).map(token => `Token #${token.tokenId}`);
   const chartCounts = tokenData.slice(0, topN).map(token => token.mint_count);
 
@@ -35,7 +37,7 @@ function TokenChart({ tokenData = [], topN = 20 }) {
       {
         label: 'Mint Count',
         data: chartCounts,
-        backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue bars
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
         borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1,
       },
@@ -43,15 +45,15 @@ function TokenChart({ tokenData = [], topN = 20 }) {
   };
 
   const options = {
-    responsive: true, // Make chart responsive
-    maintainAspectRatio: false, // Allow chart to fill container height
+    responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top', // Position the legend
+        position: 'top',
       },
       title: {
         display: true,
-        text: `Top ${topN} Minted Tokens`, // Chart title
+        text: `Top ${topN} Minted Tokens`,
         font: {
             size: 16
         }
@@ -59,29 +61,58 @@ function TokenChart({ tokenData = [], topN = 20 }) {
       tooltip: {
         callbacks: {
             label: function(context) {
-                // Show 'Token ID: X - Count: Y' in tooltip
                 let label = context.dataset.label || '';
                 if (label) {
                     label += ': ';
                 }
                 if (context.parsed.y !== null) {
-                    // Get the original tokenId from the label
-                    const fullLabel = context.label || ''; // e.g., "Token #123"
+                    const fullLabel = context.label || '';
                     const tokenId = fullLabel.replace('Token #','');
                     label = `Token ID ${tokenId} - Count: ${context.parsed.y.toLocaleString()}`;
                 }
                 return label;
             }
         }
+      },
+      // --- Configure Datalabels Plugin ---
+      datalabels: {
+        // Anchor labels to the top of the bars
+        anchor: 'end',
+        // Align labels above the bars
+        align: 'end',
+        // Format the label (display the number)
+        formatter: (value, context) => {
+          // Only display labels for bars with a count > 0
+          return value > 0 ? value.toLocaleString() : '';
+        },
+        // Style the labels
+        color: '#555', // Label color
+        font: {
+          weight: 'bold',
+          size: 10, // Adjust size as needed
+        },
+        // Optional: Add padding between label and bar top
+        offset: 4,
+        // Optional: Rotate labels if they overlap (e.g., -45)
+        // rotation: 0,
       }
+      // --- End Datalabels Configuration ---
     },
     scales: {
       y: {
-        beginAtZero: true, // Start y-axis at 0
+        beginAtZero: true,
         title: {
             display: true,
             text: 'Total Mints'
-        }
+        },
+        // Optional: Add some extra space at the top for the labels
+        ticks: {
+            callback: function(value) {
+                 // Format y-axis ticks if needed
+                 return value.toLocaleString();
+            }
+        },
+        grace: '10%' // Add 10% padding to the top of the y-axis
       },
       x: {
          title: {
@@ -92,8 +123,7 @@ function TokenChart({ tokenData = [], topN = 20 }) {
     },
   };
 
-  // Render the Bar chart component with the data and options
-  // Add a container div to control chart size
+  // Render the Bar chart component
   return (
     <div style={{ position: 'relative', height: '50vh', width: '100%' }}>
          <Bar options={options} data={data} />
