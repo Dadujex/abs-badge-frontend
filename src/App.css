@@ -1,0 +1,123 @@
+body {
+  font-family: sans-serif;
+  margin: 0;
+  background-color: #f4f7f6;
+  color: #333;
+}
+
+.App {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.App-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.App-header h1 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.8rem;
+}
+
+.status-indicator {
+  font-size: 0.9rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.status-indicator.connected {
+  color: #27ae60;
+  background-color: #e9f7ef;
+}
+
+.status-indicator.disconnected {
+  color: #e74c3c;
+  background-color: #fdedec;
+}
+
+.error-message {
+    width: 100%; /* Take full width below header */
+    text-align: center;
+    color: #e74c3c;
+    background-color: #fdedec;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.5rem; /* Space from header */
+}
+
+
+main {
+  padding: 0;
+}
+
+.token-table-container h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #34495e;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 0.8rem 1rem;
+  text-align: left;
+}
+
+th {
+  background-color: #ecf0f1;
+  font-weight: bold;
+  color: #34495e;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+td:nth-child(1), /* Rank */
+td:nth-child(3)  /* Mint Count */
+{
+  text-align: right;
+  font-feature-settings: "tnum"; /* Align numbers */
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .App {
+        padding: 1rem;
+    }
+    .App-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem; /* Add space below title */
+    }
+    .App-header {
+        flex-direction: column; /* Stack header items */
+        align-items: flex-start; /* Align items left */
+    }
+    .status-indicator {
+        margin-top: 0.5rem; /* Space from title */
+    }
+    th, td {
+        padding: 0.5rem 0.7rem;
+    }
+}
