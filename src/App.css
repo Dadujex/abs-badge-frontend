@@ -6,7 +6,8 @@ body {
 }
 
 .App {
-  max-width: 900px;
+  /* Allow wider content for the chart */
+  max-width: 1100px;
   margin: 2rem auto;
   padding: 1rem 2rem;
   background-color: #fff;
@@ -21,7 +22,7 @@ body {
   border-bottom: 1px solid #eee;
   padding-bottom: 1rem;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  flex-wrap: wrap;
 }
 
 .App-header h1 {
@@ -48,13 +49,13 @@ body {
 }
 
 .error-message {
-    width: 100%; /* Take full width below header */
+    width: 100%;
     text-align: center;
     color: #e74c3c;
     background-color: #fdedec;
     padding: 0.5rem;
     border-radius: 4px;
-    margin-top: 0.5rem; /* Space from header */
+    margin-top: 0.5rem;
 }
 
 
@@ -62,62 +63,34 @@ main {
   padding: 0;
 }
 
-.token-table-container h2 {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: #34495e;
+/* Style the chart container */
+.chart-container {
+    margin-top: 2rem; /* Add some space above the chart */
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    background-color: #fff; /* Ensure background for chart */
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 0.8rem 1rem;
-  text-align: left;
-}
-
-th {
-  background-color: #ecf0f1;
-  font-weight: bold;
-  color: #34495e;
-}
-
-tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-tbody tr:hover {
-  background-color: #f1f1f1;
-}
-
-td:nth-child(1), /* Rank */
-td:nth-child(3)  /* Mint Count */
-{
-  text-align: right;
-  font-feature-settings: "tnum"; /* Align numbers */
-}
 
 /* Responsive adjustments */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .App {
         padding: 1rem;
+        margin: 1rem;
     }
     .App-header h1 {
         font-size: 1.5rem;
-        margin-bottom: 0.5rem; /* Add space below title */
+        margin-bottom: 0.5rem;
     }
     .App-header {
-        flex-direction: column; /* Stack header items */
-        align-items: flex-start; /* Align items left */
+        flex-direction: column;
+        align-items: flex-start;
     }
     .status-indicator {
-        margin-top: 0.5rem; /* Space from title */
+        margin-top: 0.5rem;
     }
-    th, td {
-        padding: 0.5rem 0.7rem;
+    .chart-container {
+        padding: 0.5rem;
     }
 }

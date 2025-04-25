@@ -1,95 +1,90 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import io from 'socket.io-client';
-import './App.css'; // Basic styling
+import TokenChart from './TokenChart'; // Import the new chart component
+import './App.css';
 
 // --- Configuration ---
-// URL of your backend server (the one running server.js)
-// Make sure this matches where your backend is running.
-// If backend is on the same machine during dev, localhost is fine.
-// If backend is deployed (e.g., Fly.io), use its public URL.
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const TOP_N_TOKENS_TO_DISPLAY = 20; // How many tokens to show in the chart
 
 function App() {
-  // State to hold the token counts, initially empty
   const [tokenCounts, setTokenCounts] = useState([]);
-  // State to track connection status
   const [isConnected, setIsConnected] = useState(false);
-  // State for loading initial data
   const [isLoading, setIsLoading] = useState(true);
-  // State for potential errors
   const [error, setError] = useState(null);
 
   // --- Fetch Initial Data ---
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    console.log(`Fetching initial data from ${BACKEND_URL}/api/token-counts`);
+    const apiUrl = `${BACKEND_URL}/api/token-counts`;
+    console.log(`Fetching initial data from: ${apiUrl}`);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/token-counts`);
+      const response = await fetch(apiUrl);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorBody = await response.text(); // Get more error details
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
       }
       const data = await response.json();
+       // Ensure data is an array before sorting/setting
+      if (!Array.isArray(data)) {
+          throw new Error("Invalid data format received from API.");
+      }
       console.log(`Received ${data.length} initial token counts.`);
-      // Sort data client-side as well, just in case (optional)
       data.sort((a, b) => b.mint_count - a.mint_count);
       setTokenCounts(data);
     } catch (err) {
       console.error("Failed to fetch initial data:", err);
-      setError("Could not load initial token data. Please try refreshing.");
+      setError(`Could not load initial token data: ${err.message}. Please try refreshing.`);
     } finally {
       setIsLoading(false);
     }
-  }, []); // No dependencies, runs once
+  }, []);
 
   // --- Effect for Initial Data Fetch ---
   useEffect(() => {
     fetchInitialData();
-  }, [fetchInitialData]); // Run once on mount
+  }, [fetchInitialData]);
 
   // --- Effect for WebSocket Connection ---
   useEffect(() => {
     console.log('Setting up WebSocket connection...');
-    // Connect to the Socket.IO server running on the backend
     const socket = io(BACKEND_URL, {
         // Optional: Add reconnection options if needed
         // reconnectionAttempts: 5,
         // reconnectionDelay: 1000,
     });
 
-    // --- Socket Event Listeners ---
     socket.on('connect', () => {
       console.log('WebSocket connected:', socket.id);
       setIsConnected(true);
-      setError(null); // Clear previous errors on successful connection
+      setError(null);
     });
 
     socket.on('disconnect', (reason) => {
       console.log('WebSocket disconnected:', reason);
       setIsConnected(false);
-      // Optionally show an error or attempt reconnect message
-      // setError("Disconnected from real-time updates. Attempting to reconnect...");
     });
 
     socket.on('connect_error', (err) => {
       console.error('WebSocket connection error:', err.message);
       setIsConnected(false);
-      setError(`Could not connect to real-time updates (${err.message}). Backend might be down.`);
+      // Don't overwrite fetch errors if already present
+      if (!error) {
+          setError(`Could not connect to real-time updates (${err.message}). Backend might be down.`);
+      }
     });
 
-    // Listen for the 'tokenUpdate' event from the server
     socket.on('tokenUpdate', (updatedToken) => {
       console.log('Received tokenUpdate:', updatedToken);
       setTokenCounts(prevCounts => {
-        // Find if the token already exists in our list
         const existingIndex = prevCounts.findIndex(t => t.tokenId === updatedToken.tokenId);
         let newCounts = [...prevCounts];
 
         if (existingIndex !== -1) {
-          // Update existing token's count
           newCounts[existingIndex] = { ...newCounts[existingIndex], mint_count: updatedToken.mint_count };
         } else {
-          // Add new token to the list
+          // Only add if it wasn't there before
           newCounts.push(updatedToken);
         }
 
@@ -99,14 +94,12 @@ function App() {
       });
     });
 
-    // --- Cleanup Function ---
-    // Disconnect the socket when the component unmounts
     return () => {
       console.log('Cleaning up WebSocket connection...');
       socket.disconnect();
       setIsConnected(false);
     };
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, [error]); // Re-run if error changes (e.g., to clear connection error message)
 
   return (
     <div className="App">
@@ -122,35 +115,16 @@ function App() {
         {isLoading ? (
           <p>Loading initial token counts...</p>
         ) : (
-          <div className="token-table-container">
-            <h2>Token Leaderboard</h2>
-            {tokenCounts.length > 0 ? (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Rank</th>
-                    <th>Token ID</th>
-                    <th>Mint Count</th>
-                    {/* Add more columns if you store names/metadata */}
-                    {/* <th>Name</th> */}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tokenCounts.map((token, index) => (
-                    <tr key={token.tokenId || index}> {/* Use index as fallback key */}
-                      <td>{index + 1}</td>
-                      <td>{token.tokenId}</td>
-                      <td>{token.mint_count?.toLocaleString() ?? 'N/A'}</td>
-                      {/* Add more columns if needed */}
-                      {/* <td>{token.name || '-'}</td> */}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No token data available yet.</p>
-            )}
-          </div>
+           // Use a container for the chart
+           <div className="chart-container">
+             {tokenCounts.length > 0 ? (
+               // Render the chart component, passing the data and how many items to show
+               <TokenChart tokenData={tokenCounts} topN={TOP_N_TOKENS_TO_DISPLAY} />
+             ) : (
+               // Show message if there's no data after loading (and no error)
+               !error && <p>No token data available yet.</p>
+             )}
+           </div>
         )}
       </main>
     </div>
