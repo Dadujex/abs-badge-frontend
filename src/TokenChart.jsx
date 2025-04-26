@@ -1,4 +1,3 @@
-// src/TokenChart.jsx (Updated with datalabels)
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -10,7 +9,6 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-// Import the datalabels plugin
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // Register Chart.js components AND the datalabels plugin
@@ -21,18 +19,24 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ChartDataLabels // Register the plugin
+  ChartDataLabels
 );
 
 // Component to display the token counts as a bar chart
 function TokenChart({ tokenData = [], topN = 20 }) {
 
   // Prepare data for the chart
-  const chartLabels = tokenData.slice(0, topN).map(token => `Token #${token.tokenId}`);
-  const chartCounts = tokenData.slice(0, topN).map(token => token.mint_count);
+  const topTokens = tokenData.slice(0, topN);
+
+  // Generate labels: Use name if available, otherwise use Token ID
+  const chartLabels = topTokens.map(token => {
+    // Check if name exists and is not just whitespace
+    return token.name?.trim() ? token.name : `Token #${token.tokenId}`;
+  });
+  const chartCounts = topTokens.map(token => token.mint_count);
 
   const data = {
-    labels: chartLabels,
+    labels: chartLabels, // Use the generated labels
     datasets: [
       {
         label: 'Mint Count',
@@ -61,42 +65,32 @@ function TokenChart({ tokenData = [], topN = 20 }) {
       tooltip: {
         callbacks: {
             label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                    label += ': ';
-                }
-                if (context.parsed.y !== null) {
-                    const fullLabel = context.label || '';
-                    const tokenId = fullLabel.replace('Token #','');
-                    label = `Token ID ${tokenId} - Count: ${context.parsed.y.toLocaleString()}`;
-                }
-                return label;
+                // Get the original token data for this bar/label index
+                const index = context.dataIndex;
+                const token = topTokens[index]; // Get the full token object
+
+                if (!token) return ''; // Safety check
+
+                const displayName = token.name?.trim() ? token.name : `Token ID ${token.tokenId}`;
+                const count = context.parsed.y !== null ? context.parsed.y.toLocaleString() : 'N/A';
+
+                return `${displayName} - Count: ${count}`;
             }
         }
       },
-      // --- Configure Datalabels Plugin ---
       datalabels: {
-        // Anchor labels to the top of the bars
         anchor: 'end',
-        // Align labels above the bars
         align: 'end',
-        // Format the label (display the number)
         formatter: (value, context) => {
-          // Only display labels for bars with a count > 0
           return value > 0 ? value.toLocaleString() : '';
         },
-        // Style the labels
-        color: '#555', // Label color
+        color: '#555',
         font: {
           weight: 'bold',
-          size: 10, // Adjust size as needed
+          size: 10,
         },
-        // Optional: Add padding between label and bar top
         offset: 4,
-        // Optional: Rotate labels if they overlap (e.g., -45)
-        // rotation: 0,
       }
-      // --- End Datalabels Configuration ---
     },
     scales: {
       y: {
@@ -105,25 +99,23 @@ function TokenChart({ tokenData = [], topN = 20 }) {
             display: true,
             text: 'Total Mints'
         },
-        // Optional: Add some extra space at the top for the labels
         ticks: {
             callback: function(value) {
-                 // Format y-axis ticks if needed
                  return value.toLocaleString();
             }
         },
-        grace: '10%' // Add 10% padding to the top of the y-axis
+        grace: '10%'
       },
       x: {
          title: {
             display: true,
-            text: 'Token ID'
+            // Update axis title to reflect content
+            text: 'Token Name / ID'
          }
       }
     },
   };
 
-  // Render the Bar chart component
   return (
     <div style={{ position: 'relative', height: '50vh', width: '100%' }}>
          <Bar options={options} data={data} />

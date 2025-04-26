@@ -16,7 +16,7 @@ function TokenTable({ tokenData = [], topN = 30 }) { // Default or use prop
       <thead>
         <tr>
           <th>Rank</th>
-          <th>Token ID</th>
+          <th>Token Name/ID</th>
           <th>Mint Count</th>
           {/* Add more columns if you store names/metadata */}
           {/* <th>Name</th> */}
@@ -26,7 +26,7 @@ function TokenTable({ tokenData = [], topN = 30 }) { // Default or use prop
         {displayData.map((token, index) => (
           <tr key={token.tokenId || index}> {/* Use index as fallback key */}
             <td>{index + 1}</td>
-            <td>{token.tokenId}</td>
+            <td>{token.name?.trim() ? token.name : token.tokenId}</td>
             <td>{token.mint_count?.toLocaleString() ?? 'N/A'}</td>
             {/* Add more columns if needed */}
             {/* <td>{token.name || '-'}</td> */}
