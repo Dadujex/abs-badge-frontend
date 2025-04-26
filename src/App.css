@@ -20,25 +20,17 @@ body {
 .App-header {
   display: flex;
   justify-content: space-between;
-  align-items: center; /* Ensure vertical alignment */
-  gap: 1rem; 
+  align-items: center;
   border-bottom: 1px solid #eee;
   padding-bottom: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
-.App-header h1 { margin: 0; color: #2c3e50; font-size: 1.8rem; flex-grow: 1; }
+.App-header h1 { margin: 0; color: #2c3e50; font-size: 1.8rem; }
 .status-indicator { font-size: 0.9rem; padding: 0.3rem 0.8rem; border-radius: 12px; font-weight: bold; }
 .status-indicator.connected { color: #27ae60; background-color: #e9f7ef; }
 .status-indicator.disconnected { color: #e74c3c; background-color: #fdedec; }
-.error-message { width: 100%; text-align: center; color: #e74c3c; background-color: #fdedec; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; order:3; }
-
-.status-container {
-    display: flex;
-    align-items: center; /* Vertically align items */
-    gap: 0.5rem; /* Space between connection status and refresh indicator */
-    flex-shrink: 0; /* Prevent shrinking if header space is tight */
-}
+.error-message { width: 100%; text-align: center; color: #e74c3c; background-color: #fdedec; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; }
 
 main { padding: 0; }
 
@@ -185,11 +177,8 @@ td:nth-child(1), td:nth-child(3) { text-align: right; font-feature-settings: "tn
 
 /* Keep adjustments for very small mobile */
 @media (max-width: 600px) {
-    .App { padding: 1rem; margin: 1rem; flex-direction: column; align-items: flex-start; }
+    .App { padding: 1rem; margin: 1rem; }
     .App-header h1 { font-size: 1.5rem; }
-    .status-container {
-        margin-top: 0.5rem; /* Add space below title on mobile */
-    }
     /* ... other mobile styles ... */
     .recent-mints-section h2 { font-size: 1.2rem; }
     .token-mints-header { font-size: 1rem; }
