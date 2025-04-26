@@ -19,13 +19,6 @@ function App() {
   const [tokenMetadata, setTokenMetadata] = useState(new Map());
   const [error, setError] = useState(null);
   const [recentMintsByToken, setRecentMintsByToken] = useState(new Map());
-  const [mintCountsByWindow, setMintCountsByWindow] = useState({
-    min1: 0,
-    min5: 0,
-    min15: 0,
-    min30: 0,
-  });
-  const recentMintTimestampsRef = useRef([]);
 
   // --- Fetch Initial Data (Keep as before) ---
   const fetchInitialData = useCallback(async () => {
@@ -99,50 +92,6 @@ function App() {
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
-
-  // --- Effect for Calculating Time Window Counts ---
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      const now = Date.now();
-      const oneMinuteAgo = now - (1 * 60 * 1000);
-      const fiveMinutesAgo = now - (5 * 60 * 1000);
-      const fifteenMinutesAgo = now - (15 * 60 * 1000);
-      const thirtyMinutesAgo = now - TIMESTAMP_TTL_MS; // Use TTL for pruning boundary
-
-      let count1 = 0;
-      let count5 = 0;
-      let count15 = 0;
-      let count30 = 0;
-
-      // Filter out old timestamps (older than 30 mins + a small buffer)
-      // Modify the ref array directly
-      recentMintTimestampsRef.current = recentMintTimestampsRef.current.filter(
-          ts => ts.getTime() >= thirtyMinutesAgo - 5000 // Keep slightly longer than 30m
-      );
-
-      // Count timestamps within each window
-      for (const ts of recentMintTimestampsRef.current) {
-        const time = ts.getTime();
-        if (time >= oneMinuteAgo) count1++;
-        if (time >= fiveMinutesAgo) count5++;
-        if (time >= fifteenMinutesAgo) count15++;
-        if (time >= thirtyMinutesAgo) count30++; // Should include all remaining after filter
-      }
-
-      // Update the state with the new counts
-      setMintCountsByWindow({
-        min1: count1,
-        min5: count5,
-        min15: count15,
-        min30: count30,
-      });
-
-    }, COUNTER_UPDATE_INTERVAL_MS); // Run every X seconds
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-
-  }, []); // Empty dependency array, runs once on mount
 
   // --- Effect for WebSocket Connection (Keep as before) ---
   useEffect(() => {
