@@ -15,6 +15,7 @@ function App() {
   const [tokenCounts, setTokenCounts] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [tokenMetadata, setTokenMetadata] = useState(new Map());
   const [error, setError] = useState(null);
   const [recentMints, setRecentMints] = useState([]);
 
@@ -45,6 +46,15 @@ function App() {
 
       data.sort((a, b) => b.mint_count - a.mint_count);
       setTokenCounts(data);
+
+      const metadataMap = new Map();
+      data.forEach(token => {
+          // Only add if a name exists and is not just whitespace
+          if (token.name?.trim()) {
+              metadataMap.set(token.tokenId, token.name.trim());
+          }
+      });
+      setTokenMetadata(metadataMap);
 
     } catch (err) {
       console.error("Failed during fetch or parsing",);
@@ -99,7 +109,7 @@ function App() {
 
   const shortenAddress = (address) => {
     if (!address || address.length < 10) return address || ''; // Handle null/short addresses
-    return <span class="math-inline">{address.substring(0, 6)}...{address.substring(address.length - 4)}</span>;
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   }
 
   return (
@@ -137,7 +147,42 @@ function App() {
             )}
           </main>
         </section>
-        
+        <aside className="recent-mints-section">
+          <h2>Recent Mints</h2>
+          {recentMints.length > 0 ? (
+            <ul className="recent-mints-list">
+              {recentMints.map((mint) => {
+                const tokenName = tokenMetadata.get(mint.tokenId);
+                const displayIdentifier = tokenName ? tokenName : `Token #${mint.tokenId}`;
+
+                return (
+                  <li key={mint.id}>
+                    {/* Display Recipient Address */}
+                    <span className="mint-recipient" title={mint.recipientAddress}>
+                      {mint.recipientAddress ? `To: ${shortenAddress(mint.recipientAddress)}` : 'Recipient N/A'}
+                    </span>
+                    {/* Display Token ID as a Link */}
+                    <span className="mint-token">
+                      <a
+                        href={`${ABSCAN_NFT_URL_BASE}/${mint.tokenId}`}
+                        target="_blank" // Open in new tab
+                        rel="noopener noreferrer" // Security best practice
+                        title={`View Token ID ${mint.tokenId} on AbsScan`}
+                      >
+                        {displayIdentifier}
+                      </a>
+                    </span>
+                    <span className="mint-time">
+                      {mint.timestamp.toLocaleTimeString()}
+                    </span> 
+                  </li>
+              )
+              })}
+            </ul>
+          ) : (
+            <p className="no-mints-message">{isConnected ? 'Waiting for new mints...' : 'Connect to see recent mints.'}</p>
+          )}
+        </aside>
       </div>
       
     </div>
