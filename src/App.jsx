@@ -11,6 +11,8 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const TOP_N_TOKENS_TO_DISPLAY = 30; // How many tokens to show
 const MAX_RECENT_MINTS_PER_TOKEN = 5; // How many recent mints to show
 const ABSCAN_NFT_URL_BASE = "https://abscan.org/nft/0xbc176ac2373614f9858a118917d83b139bcb3f8c";
+const COUNTER_UPDATE_INTERVAL_MS = 5000; // Update counters every 5 seconds
+const TIMESTAMP_TTL_MS = 30 * 60 * 1000; // Keep timestamps for 30 minutes (used for filtering)
 
 function App() {
   const [tokenCounts, setTokenCounts] = useState([]);
@@ -19,6 +21,8 @@ function App() {
   const [tokenMetadata, setTokenMetadata] = useState(new Map());
   const [error, setError] = useState(null);
   const [recentMintsByToken, setRecentMintsByToken] = useState(new Map());
+  const [allRecentTimestamps, setAllRecentTimestamps] = useState([]);
+  const [mintCountsByWindow, setMintCountsByWindow] = useState({ min1: 0, min5: 0, min15: 0, min30: 0 });
 
   // --- Fetch Initial Data (Keep as before) ---
   const fetchInitialData = useCallback(async () => {
@@ -80,6 +84,15 @@ function App() {
 
       setRecentMintsByToken(initialMintsMap);
 
+      const timestampStrings = data.initialTimestamps;
+      const nowForFilter = Date.now();
+      const cutoffTime = nowForFilter - TIMESTAMP_TTL_MS;
+      const initialTimestamps = timestampStrings
+          .map(tsStr => new Date(tsStr)) // Convert ISO strings to Date objects
+          .filter(ts => !isNaN(ts) && ts.getTime() >= cutoffTime); // Filter out invalid/old dates
+      initialTimestamps.sort((a, b) => b.timestamp - a.timestamp); // Sort newest first (optional but good practice)
+      setAllRecentTimestamps(initialTimestamps);
+
     } catch (err) {
       console.error("Failed during fetch or parsing",);
       setError(`Could not load initial token data.`);
@@ -134,10 +147,64 @@ function App() {
         newMap.set(updatedToken.tokenId, updatedMintsForToken);
         return newMap;
       });
+
+      if (updateData.timestamp) { // Check if timestamp exists in payload
+        const newTimestamp = new Date(updateData.timestamp); // Parse ISO string from backend
+        if (!isNaN(newTimestamp)) { // Check if parsing was successful
+            setAllRecentTimestamps(prevTimestamps => {
+                const nowForFilter = Date.now();
+                const cutoffTime = nowForFilter - TIMESTAMP_TTL_MS;
+                // Add new timestamp and filter out old ones in one go
+                // Prepend the new timestamp
+                const updatedTimestamps = [newTimestamp, ...prevTimestamps]
+                    .filter(ts => ts.getTime() >= cutoffTime);
+                // No need to sort here if we always prepend
+                return updatedTimestamps;
+            });
+        }
+      } 
     });
 
     return () => { socket.disconnect(); setIsConnected(false); };
   }, [error]);
+
+  useEffect(() => {
+    console.log("Setting up counter interval...");
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      const oneMinuteAgo = now - (1 * 60 * 1000);
+      const fiveMinutesAgo = now - (5 * 60 * 1000);
+      const fifteenMinutesAgo = now - (15 * 60 * 1000);
+      const thirtyMinutesAgo = now - TIMESTAMP_TTL_MS; // Use TTL as boundary
+
+      let count1 = 0, count5 = 0, count15 = 0, count30 = 0;
+
+      // Read directly from the state variable `allRecentTimestamps`
+      const currentTimestamps = allRecentTimestamps;
+
+      for (const ts of currentTimestamps) {
+        // Ensure ts is a valid Date object before calling getTime
+        if (ts instanceof Date && !isNaN(ts)) {
+            const time = ts.getTime();
+            // Check against pre-calculated boundaries
+            if (time >= oneMinuteAgo) count1++;
+            if (time >= fiveMinutesAgo) count5++;
+            if (time >= fifteenMinutesAgo) count15++;
+            // Count if it's within the 30-minute TTL window (already filtered)
+            if (time >= thirtyMinutesAgo) count30++;
+        }
+      }
+
+      // Update the state with the new counts
+      const newCounts = { min1: count1, min5: count5, min15: count15, min30: count30 };
+      setMintCountsByWindow(newCounts);
+
+    }, COUNTER_UPDATE_INTERVAL_MS);
+
+    // Cleanup interval on component unmount
+    return () => { console.log("Clearing counter interval..."); clearInterval(intervalId); }
+
+  }, [allRecentTimestamps]); // Re-run calculation IF the timestamp list state changes
 
   const shortenAddress = (address) => {
     if (!address || address.length < 10) return address || ''; // Handle null/short addresses
@@ -153,6 +220,25 @@ function App() {
         </div>
         {error && <p className="error-message">{error}</p>}
       </header>
+
+      <section className="counter-section">
+         <div className="counter-item">
+            <span className="counter-value">{mintCountsByWindow.min1.toLocaleString()}</span>
+            <span className="counter-label">Mints (1m)</span>
+        </div>
+         <div className="counter-item">
+            <span className="counter-value">{mintCountsByWindow.min5.toLocaleString()}</span>
+            <span className="counter-label">Mints (5m)</span>
+        </div>
+         <div className="counter-item">
+            <span className="counter-value">{mintCountsByWindow.min15.toLocaleString()}</span>
+            <span className="counter-label">Mints (15m)</span>
+        </div>
+         <div className="counter-item">
+            <span className="counter-value">{mintCountsByWindow.min30.toLocaleString()}</span>
+            <span className="counter-label">Mints (30m)</span>
+        </div>
+      </section>
 
       <div className='main-layout'>
         <section className="data-display-section">
