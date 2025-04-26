@@ -8,6 +8,7 @@ import './App.css'; // Styles will handle hiding/showing
 // --- Configuration ---
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const TOP_N_TOKENS_TO_DISPLAY = 30; // How many tokens to show
+const API_KEY = import.meta.env.VITE_API_SECRET_KEY;
 
 function App() {
   const [tokenCounts, setTokenCounts] = useState([]);
@@ -20,37 +21,46 @@ function App() {
     setIsLoading(true);
     setError(null);
     const apiUrl = `${BACKEND_URL}/api/token-counts`;
-    console.log(`Fetching initial data from: ${apiUrl}`);
+
+    const requestHeaders = new Headers();
+    // Only add the header if the API_KEY is actually present
+    if (API_KEY) {
+        requestHeaders.append('X-API-Key', API_KEY);
+    } else {
+        // Handle missing API key - crucial for production
+        console.error("API Key is missing! Cannot authenticate API request.");
+        setError("Configuration error: Frontend API Key is missing. Deployment requires VITE_API_SECRET_KEY.");
+        setIsLoading(false);
+        return; // Stop fetching if key is missing
+    }
+
     try {
-      const response = await fetch(apiUrl);
-      console.log(`Fetch response status: ${response.status}, ok: ${response.ok}`);
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: requestHeaders,
+      });
+
       const headers = {};
       response.headers.forEach((value, key) => { headers[key] = value; });
-      console.log("Response Headers:", headers);
-      console.log("Access-Control-Allow-Origin Header:", response.headers.get('access-control-allow-origin'));
 
       if (!response.ok) {
-        const errorBody = await response.text().catch(() => 'Could not read error body');
-        console.error(`Fetch failed! Status: ${response.status}, Body: ${errorBody}`);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const clonedResponse = response.clone();
       const responseText = await clonedResponse.text();
-      console.log("Raw response text received:", responseText);
       const data = await response.json();
-      console.log("Parsed JSON data:", data);
 
       if (!Array.isArray(data)) {
-          console.error("Parsed data is not an array:", data);
           throw new Error("Invalid data format received from API.");
       }
-      console.log(`Received ${data.length} initial token counts.`);
+
       data.sort((a, b) => b.mint_count - a.mint_count);
       setTokenCounts(data);
 
     } catch (err) {
-      console.error("Failed during fetch or parsing:", err);
-      setError(`Could not load initial token data. ${err.message}. Check browser console/network tab.`);
+      console.error("Failed during fetch or parsing",);
+      setError(`Could not load initial token data.`);
     } finally {
       setIsLoading(false);
     }
@@ -66,9 +76,9 @@ function App() {
     console.log('Setting up WebSocket connection...');
     const socket = io(BACKEND_URL);
 
-    socket.on('connect', () => { console.log('WebSocket connected:', socket.id); setIsConnected(true); setError(prevError => prevError?.includes('Could not connect') ? null : prevError); });
-    socket.on('disconnect', (reason) => { console.log('WebSocket disconnected:', reason); setIsConnected(false); });
-    socket.on('connect_error', (err) => { console.error('WebSocket connection error:', err.message); setIsConnected(false); if (!error) { setError(`Could not connect to real-time updates (${err.message}).`); } });
+    socket.on('connect', () => { setIsConnected(true); setError(prevError => prevError?.includes('Could not connect') ? null : prevError); });
+    socket.on('disconnect', (reason) => { setIsConnected(false); });
+    socket.on('connect_error', (err) => { setIsConnected(false); if (!error) { setError(`Could not connect to real-time updates.`); } });
 
     socket.on('tokenUpdate', (updatedToken) => {
       // console.log('Received tokenUpdate:', updatedToken); // Reduce log noise
@@ -85,7 +95,7 @@ function App() {
       });
     });
 
-    return () => { console.log('Cleaning up WebSocket connection...'); socket.disconnect(); setIsConnected(false); };
+    return () => { socket.disconnect(); setIsConnected(false); };
   }, [error]);
 
   return (
