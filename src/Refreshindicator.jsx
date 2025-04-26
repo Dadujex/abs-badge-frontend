@@ -1,6 +1,6 @@
 // src/RefreshIndicator.jsx
 import React from 'react';
-import './RefreshIndicator.css'; // Import CSS for styling and animation
+import './Refreshindicator.css'; // Import CSS for styling and animation
 
 const RefreshIndicator = () => {
   return (
