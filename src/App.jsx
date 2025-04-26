@@ -104,47 +104,64 @@ function App() {
 
   // --- Effect for Calculating Time Window Counts ---
   useEffect(() => {
+    console.log("Setting up counter interval..."); // Log setup
     const intervalId = setInterval(() => {
       const now = Date.now();
       const oneMinuteAgo = now - (1 * 60 * 1000);
       const fiveMinutesAgo = now - (5 * 60 * 1000);
       const fifteenMinutesAgo = now - (15 * 60 * 1000);
-      const thirtyMinutesAgo = now - TIMESTAMP_TTL_MS; // Use TTL for pruning boundary
+      const thirtyMinutesAgo = now - TIMESTAMP_TTL_MS;
 
       let count1 = 0;
       let count5 = 0;
       let count15 = 0;
       let count30 = 0;
 
-      // Filter out old timestamps (older than 30 mins + a small buffer)
-      // Modify the ref array directly
+      // --- Debug Log: Before Filter ---
+      const timestampsBeforeFilter = [...recentMintTimestampsRef.current]; // Copy for logging
+      console.log(`[Counter Interval] Running. Timestamps before filter: ${timestampsBeforeFilter.length}`);
+
+      // Filter out old timestamps
       recentMintTimestampsRef.current = recentMintTimestampsRef.current.filter(
-          ts => ts.getTime() >= thirtyMinutesAgo - 5000 // Keep slightly longer than 30m
+          ts => ts.getTime() >= thirtyMinutesAgo - 5000 // Keep slightly longer
       );
 
+      // --- Debug Log: After Filter ---
+      const timestampsAfterFilter = recentMintTimestampsRef.current;
+      console.log(`[Counter Interval] Timestamps after filter (older than ~30m removed): ${timestampsAfterFilter.length}`);
+
       // Count timestamps within each window
-      for (const ts of recentMintTimestampsRef.current) {
+      for (const ts of timestampsAfterFilter) { // Use the filtered array
         const time = ts.getTime();
         if (time >= oneMinuteAgo) count1++;
         if (time >= fiveMinutesAgo) count5++;
         if (time >= fifteenMinutesAgo) count15++;
-        if (time >= thirtyMinutesAgo) count30++; // Should include all remaining after filter
+        if (time >= thirtyMinutesAgo) count30++;
       }
 
+      // --- Debug Log: Calculated Counts ---
+      console.log(`[Counter Interval] Calculated counts - 1m:${count1}, 5m:${count5}, 15m:${count15}, 30m:${count30}`);
+
       // Update the state with the new counts
-      setMintCountsByWindow({
-        min1: count1,
-        min5: count5,
-        min15: count15,
-        min30: count30,
+      setMintCountsByWindow(currentCounts => {
+          // Only update state if counts have actually changed
+          if (currentCounts.min1 !== count1 || currentCounts.min5 !== count5 || currentCounts.min15 !== count15 || currentCounts.min30 !== count30) {
+               console.log("[Counter Interval] Counts changed, updating state."); // Log state update
+               return { min1: count1, min5: count5, min15: count15, min30: count30 };
+          }
+          // console.log("[Counter Interval] Counts unchanged, skipping state update."); // Optional log
+          return currentCounts; // Return previous state if no change
       });
 
-    }, COUNTER_UPDATE_INTERVAL_MS); // Run every X seconds
+    }, COUNTER_UPDATE_INTERVAL_MS);
 
     // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
+    return () => {
+        console.log("Clearing counter interval..."); // Log cleanup
+        clearInterval(intervalId);
+    }
 
-  }, []); // Empty dependency array, runs once on mount
+  }, []); // Empty dependency array is correct here
 
   // --- Effect for WebSocket Connection (Keep as before) ---
   useEffect(() => {
