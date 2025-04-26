@@ -6,7 +6,6 @@ body {
 }
 
 .App {
-  /* Allow wider content for the chart */
   max-width: 1100px;
   margin: 2rem auto;
   padding: 1rem 2rem;
@@ -38,15 +37,8 @@ body {
   font-weight: bold;
 }
 
-.status-indicator.connected {
-  color: #27ae60;
-  background-color: #e9f7ef;
-}
-
-.status-indicator.disconnected {
-  color: #e74c3c;
-  background-color: #fdedec;
-}
+.status-indicator.connected { color: #27ae60; background-color: #e9f7ef; }
+.status-indicator.disconnected { color: #e74c3c; background-color: #fdedec; }
 
 .error-message {
     width: 100%;
@@ -58,39 +50,86 @@ body {
     margin-top: 0.5rem;
 }
 
+main { padding: 0; }
 
-main {
-  padding: 0;
-}
-
-/* Style the chart container */
+/* Chart container styling */
 .chart-container {
-    margin-top: 2rem; /* Add some space above the chart */
+    margin-top: 2rem;
     padding: 1rem;
     border: 1px solid #eee;
     border-radius: 6px;
-    background-color: #fff; /* Ensure background for chart */
+    background-color: #fff;
+}
+
+/* Table container styling */
+.table-container {
+    margin-top: 1.5rem;
+}
+.table-container h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #34495e;
+    font-size: 1.3rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 0.8rem 1rem;
+  text-align: left;
+  font-size: 0.9rem; /* Slightly smaller font for table */
+}
+
+th {
+  background-color: #ecf0f1;
+  font-weight: bold;
+  color: #34495e;
+}
+
+tbody tr:nth-child(even) { background-color: #f9f9f9; }
+tbody tr:hover { background-color: #f1f1f1; }
+
+td:nth-child(1), td:nth-child(3) {
+  text-align: right;
+  font-feature-settings: "tnum";
 }
 
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .App {
-        padding: 1rem;
-        margin: 1rem;
+/* --- Responsive Display Logic --- */
+
+/* Styles for mobile screens (default) */
+.display-desktop {
+    display: none; /* Hide chart by default */
+}
+.display-mobile {
+    display: block; /* Show table by default */
+}
+
+/* Styles for larger screens (e.g., tablets and desktops) */
+/* Adjust breakpoint as needed (e.g., 768px for tablets) */
+@media (min-width: 768px) {
+    .display-desktop {
+        display: block; /* Show chart on larger screens */
     }
-    .App-header h1 {
+    .display-mobile {
+        display: none; /* Hide table on larger screens */
+    }
+    .table-container h2 { /* Adjust heading size on desktop if needed */
         font-size: 1.5rem;
-        margin-bottom: 0.5rem;
     }
-    .App-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .status-indicator {
-        margin-top: 0.5rem;
-    }
-    .chart-container {
-        padding: 0.5rem;
-    }
+}
+
+/* Further adjustments for smaller mobile if needed */
+@media (max-width: 600px) {
+    .App { padding: 1rem; margin: 1rem; }
+    .App-header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .App-header { flex-direction: column; align-items: flex-start; }
+    .status-indicator { margin-top: 0.5rem; }
+    .chart-container { padding: 0.5rem; }
+    th, td { padding: 0.5rem 0.7rem; font-size: 0.85rem; }
 }
