@@ -103,6 +103,7 @@ function App() {
     socket.on('connect_error', (err) => { setIsConnected(false); if (!error) { setError(`Could not connect to real-time updates.`); } });
 
     socket.on('tokenUpdate', (updatedToken) => {
+      console.log(updatedToken)
       // console.log('Received tokenUpdate:', updatedToken); // Reduce log noise
       setTokenCounts(prevCounts => {
         const existingIndex = prevCounts.findIndex(t => t.tokenId === updatedToken.tokenId);
