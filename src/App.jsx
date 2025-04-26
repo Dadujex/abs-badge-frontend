@@ -187,6 +187,8 @@ function App() {
         newMap.set(updatedToken.tokenId, updatedMintsForToken);
         return newMap;
       });
+
+      recentMintTimestampsRef.current.push(new Date());
     });
 
     return () => { socket.disconnect(); setIsConnected(false); };
