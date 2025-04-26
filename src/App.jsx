@@ -148,8 +148,8 @@ function App() {
         return newMap;
       });
 
-      if (updateData.timestamp) { // Check if timestamp exists in payload
-        const newTimestamp = new Date(updateData.timestamp); // Parse ISO string from backend
+      if (updatedToken.timestamp) { // Check if timestamp exists in payload
+        const newTimestamp = new Date(updatedToken.timestamp); // Parse ISO string from backend
         if (!isNaN(newTimestamp)) { // Check if parsing was successful
             setAllRecentTimestamps(prevTimestamps => {
                 const nowForFilter = Date.now();
@@ -162,12 +162,8 @@ function App() {
                 // No need to sort here if we always prepend
                 return updatedTimestamps;
             });
-        } else {
-            console.warn("Received invalid timestamp in tokenUpdate:", updateData.timestamp);
-        }
-    } else {
-        console.warn("Received tokenUpdate without timestamp:", updateData);
-    }
+        } 
+      } 
     });
 
     return () => { socket.disconnect(); setIsConnected(false); };
