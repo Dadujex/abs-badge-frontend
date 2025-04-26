@@ -8,7 +8,7 @@ import './App.css'; // Styles will handle hiding/showing
 // --- Configuration ---
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const TOP_N_TOKENS_TO_DISPLAY = 30; // How many tokens to show
-const MAX_RECENT_MINTS = 10; // How many recent mints to show
+const MAX_RECENT_MINTS_PER_TOKEN = 5; // How many recent mints to show
 const ABSCAN_NFT_URL_BASE = "https://abscan.org/nft/0xbc176ac2373614f9858a118917d83b139bcb3f8c";
 
 function App() {
@@ -17,7 +17,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [tokenMetadata, setTokenMetadata] = useState(new Map());
   const [error, setError] = useState(null);
-  const [recentMints, setRecentMints] = useState([]);
+  const [recentMintsByToken, setRecentMintsByToken] = useState(new Map());
 
   // --- Fetch Initial Data (Keep as before) ---
   const fetchInitialData = useCallback(async () => {
@@ -92,16 +92,23 @@ function App() {
         return newCounts;
       });
 
-      setRecentMints(prevMints => {
-        const newMint = {
-          id: `<span class="math-inline">\{updatedToken\.tokenId\}\-</span>{updatedToken.recipientAddress}-${Date.now()}`,
-          tokenId: updatedToken.tokenId,
-          recipientAddress: updatedToken.recipientAddress, // Get recipient from payload
+      setRecentMintsByToken(prevMap => {
+        const newMintInfo = {
+          id: `${updateData.tokenId}-${updateData.recipientAddress}-${Date.now()}`, // Unique key
+          recipientAddress: updateData.recipientAddress,
           timestamp: new Date()
-        }
-        const updatedMints = [newMint, ...prevMints].slice(0, MAX_RECENT_MINTS);
-        return updatedMints;
-      })
+        };
+
+        // Get current list for this token, or initialize if new
+        const currentMints = prevMap.get(updateData.tokenId) || [];
+        // Add new mint to the start and slice to keep only the last N
+        const updatedMintsForToken = [newMintInfo, ...currentMints].slice(0, MAX_RECENT_MINTS_PER_TOKEN);
+
+        // Create a new map to trigger state update
+        const newMap = new Map(prevMap);
+        newMap.set(updateData.tokenId, updatedMintsForToken);
+        return newMap;
+      });
     });
 
     return () => { socket.disconnect(); setIsConnected(false); };
@@ -147,42 +154,40 @@ function App() {
             )}
           </main>
         </section>
-        <aside className="recent-mints-section">
-          <h2>Recent Mints</h2>
-          {recentMints.length > 0 ? (
-            <ul className="recent-mints-list">
-              {recentMints.map((mint) => {
-                const tokenName = tokenMetadata.get(mint.tokenId);
-                const displayIdentifier = tokenName ? tokenName : `Token #${mint.tokenId}`;
-
-                return (
-                  <li key={mint.id}>
-                    {/* Display Recipient Address */}
-                    <span className="mint-recipient" title={mint.recipientAddress}>
-                      {mint.recipientAddress ? `To: ${shortenAddress(mint.recipientAddress)}` : 'Recipient N/A'}
-                    </span>
-                    {/* Display Token ID as a Link */}
-                    <span className="mint-token">
-                      <a
-                        href={`${ABSCAN_NFT_URL_BASE}/${mint.tokenId}`}
-                        target="_blank" // Open in new tab
-                        rel="noopener noreferrer" // Security best practice
-                        title={`View Token ID ${mint.tokenId} on AbsScan`}
-                      >
-                        {displayIdentifier}
-                      </a>
-                    </span>
-                    <span className="mint-time">
-                      {mint.timestamp.toLocaleTimeString()}
-                    </span> 
-                  </li>
-              )
-              })}
-            </ul>
-          ) : (
-            <p className="no-mints-message">{isConnected ? 'Waiting for new mints...' : 'Connect to see recent mints.'}</p>
-          )}
-        </aside>
+        {!isLoading && (isConnected || recentMintsByToken.size > 0) && (
+          <aside className="recent-mints-section">
+            <h2>Recent Mints Activity</h2>
+            {/* Add a container for the grid layout */}
+            <div className="recent-mints-grid">
+              {recentMintsByToken.size > 0 ? (
+                 tokenCounts.slice(0, TOP_N_TOKENS_TO_DISPLAY).map(token => {
+                    const mintsForThisToken = recentMintsByToken.get(token.tokenId);
+                    const nameForThisToken = tokenMetadata.get(token.tokenId);
+                    // Render the component only if there are mints for this token
+                    if (mintsForThisToken && mintsForThisToken.length > 0) {
+                        return (
+                            <TokenRecentMintsList
+                                key={token.tokenId}
+                                tokenId={token.tokenId}
+                                tokenName={nameForThisToken}
+                                mints={mintsForThisToken}
+                                shortenAddress={shortenAddress}
+                                abscanBaseUrl={ABSCAN_NFT_URL_BASE}
+                            />
+                        );
+                    }
+                    return null;
+                 })
+              ) : (
+                <p className="no-mints-message">{isConnected ? 'Waiting for new mints...' : 'Connect to see recent mints.'}</p>
+              )}
+              {/* Message if no top tokens have recent mints */}
+              {recentMintsByToken.size > 0 && tokenCounts.slice(0, TOP_N_TOKENS_TO_DISPLAY).every(t => !recentMintsByToken.has(t.tokenId)) && (
+                  <p className="no-mints-message">No recent mints for the top {TOP_N_TOKENS_TO_DISPLAY} tokens.</p>
+              )}
+            </div> {/* End recent-mints-grid */}
+          </aside>
+        )}
       </div>
       
     </div>
