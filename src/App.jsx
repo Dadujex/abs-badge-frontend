@@ -1,5 +1,5 @@
 // src/App.jsx (Updated for Responsive Display)
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import io from 'socket.io-client';
 import TokenChart from './TokenChart'; // Import the chart component
 import TokenTable from './TokenTable'; // Import the new table component
@@ -11,8 +11,6 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const TOP_N_TOKENS_TO_DISPLAY = 30; // How many tokens to show
 const MAX_RECENT_MINTS_PER_TOKEN = 5; // How many recent mints to show
 const ABSCAN_NFT_URL_BASE = "https://abscan.org/nft/0xbc176ac2373614f9858a118917d83b139bcb3f8c";
-const COUNTER_UPDATE_INTERVAL_MS = 1000;
-const TIMESTAMP_TTL_MS = 30 * 60 * 1000;
 
 function App() {
   const [tokenCounts, setTokenCounts] = useState([]);
@@ -21,13 +19,6 @@ function App() {
   const [tokenMetadata, setTokenMetadata] = useState(new Map());
   const [error, setError] = useState(null);
   const [recentMintsByToken, setRecentMintsByToken] = useState(new Map());
-  const [mintCountsByWindow, setMintCountsByWindow] = useState({
-    min1: 0,
-    min5: 0,
-    min15: 0,
-    min30: 0,
-  });
-  const recentMintTimestampsRef = useRef([]);
 
   // --- Fetch Initial Data (Keep as before) ---
   const fetchInitialData = useCallback(async () => {
@@ -102,50 +93,6 @@ function App() {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // --- Effect for Calculating Time Window Counts ---
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      const now = Date.now();
-      const oneMinuteAgo = now - (1 * 60 * 1000);
-      const fiveMinutesAgo = now - (5 * 60 * 1000);
-      const fifteenMinutesAgo = now - (15 * 60 * 1000);
-      const thirtyMinutesAgo = now - TIMESTAMP_TTL_MS; // Use TTL for pruning boundary
-
-      let count1 = 0;
-      let count5 = 0;
-      let count15 = 0;
-      let count30 = 0;
-
-      // Filter out old timestamps (older than 30 mins + a small buffer)
-      // Modify the ref array directly
-      recentMintTimestampsRef.current = recentMintTimestampsRef.current.filter(
-          ts => ts.getTime() >= thirtyMinutesAgo - 5000 // Keep slightly longer than 30m
-      );
-
-      // Count timestamps within each window
-      for (const ts of recentMintTimestampsRef.current) {
-        const time = ts.getTime();
-        if (time >= oneMinuteAgo) count1++;
-        if (time >= fiveMinutesAgo) count5++;
-        if (time >= fifteenMinutesAgo) count15++;
-        if (time >= thirtyMinutesAgo) count30++; // Should include all remaining after filter
-      }
-
-      // Update the state with the new counts
-      setMintCountsByWindow({
-        min1: count1,
-        min5: count5,
-        min15: count15,
-        min30: count30,
-      });
-
-    }, COUNTER_UPDATE_INTERVAL_MS); // Run every X seconds
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-
-  }, []); // Empty dependency array, runs once on mount
-
   // --- Effect for WebSocket Connection (Keep as before) ---
   useEffect(() => {
     console.log('Setting up WebSocket connection...');
@@ -187,8 +134,6 @@ function App() {
         newMap.set(updatedToken.tokenId, updatedMintsForToken);
         return newMap;
       });
-
-      recentMintTimestampsRef.current.push(new Date());
     });
 
     return () => { socket.disconnect(); setIsConnected(false); };
@@ -208,25 +153,6 @@ function App() {
         </div>
         {error && <p className="error-message">{error}</p>}
       </header>
-
-      <section className="counter-section">
-        <div className="counter-item">
-            <span className="counter-value">{mintCountsByWindow.min1.toLocaleString()}</span>
-            <span className="counter-label">Mints (1m)</span>
-        </div>
-         <div className="counter-item">
-            <span className="counter-value">{mintCountsByWindow.min5.toLocaleString()}</span>
-            <span className="counter-label">Mints (5m)</span>
-        </div>
-         <div className="counter-item">
-            <span className="counter-value">{mintCountsByWindow.min15.toLocaleString()}</span>
-            <span className="counter-label">Mints (15m)</span>
-        </div>
-         <div className="counter-item">
-            <span className="counter-value">{mintCountsByWindow.min30.toLocaleString()}</span>
-            <span className="counter-label">Mints (30m)</span>
-        </div>
-      </section>
 
       <div className='main-layout'>
         <section className="data-display-section">
