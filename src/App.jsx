@@ -111,7 +111,6 @@ function App() {
                 </div>
                 {/* Table Container - Hidden on desktop */}
                 <div className="table-container display-mobile">
-                   <h2>Token Leaderboard (Top {TOP_N_TOKENS_TO_DISPLAY})</h2>
                    <TokenTable tokenData={tokenCounts} topN={TOP_N_TOKENS_TO_DISPLAY} />
                 </div>
               </>

@@ -56,11 +56,7 @@ function TokenChart({ tokenData = [], topN = 20 }) {
         position: 'top',
       },
       title: {
-        display: true,
-        text: `Top ${topN} Minted Tokens`,
-        font: {
-            size: 16
-        }
+        display: false,
       },
       tooltip: {
         callbacks: {
