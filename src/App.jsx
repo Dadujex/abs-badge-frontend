@@ -137,37 +137,7 @@ function App() {
             )}
           </main>
         </section>
-        <aside className="recent-mints-section">
-          <h2>Recent Mints</h2>
-          {recentMints.length > 0 ? (
-            <ul className="recent-mints-list">
-              {recentMints.map((mint) => (
-                <li key={mint.id}>
-                  {/* Display Recipient Address */}
-                  <span className="mint-recipient" title={mint.recipientAddress}>
-                    {mint.recipientAddress ? `To: ${shortenAddress(mint.recipientAddress)}` : 'Recipient N/A'}
-                  </span>
-                  {/* Display Token ID as a Link */}
-                  <span className="mint-token">
-                    <a
-                      href={`<span class="math-inline">\{ABSCAN\_NFT\_URL\_BASE\}/</span>{mint.tokenId}`}
-                      target="_blank" // Open in new tab
-                      rel="noopener noreferrer" // Security best practice
-                      title={`View Token ID ${mint.tokenId} on AbsScan`}
-                    >
-                      Token #{mint.tokenId}
-                    </a>
-                  </span>
-                  <span className="mint-time">
-                    {mint.timestamp.toLocaleTimeString()}
-                  </span> 
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="no-mints-message">{isConnected ? 'Waiting for new mints...' : 'Connect to see recent mints.'}</p>
-          )}
-        </aside>
+        
       </div>
       
     </div>
