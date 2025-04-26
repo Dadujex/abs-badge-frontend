@@ -120,6 +120,7 @@ function App() {
         const newMintInfo = {
           id: `${updatedToken.tokenId}-${updatedToken.recipientAddress}-${Date.now()}`, // Unique key
           recipientAddress: updatedToken.recipientAddress,
+          transactionHash: updatedToken.transactionHash,
           timestamp: new Date()
         };
 
