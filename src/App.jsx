@@ -243,6 +243,13 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Real-Time Token Mint Counts</h1>
+        <div className="status-container">
+            <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
+              {isConnected ? '● Connected' : '○ Disconnected'}
+            </div>
+            {/* Add the refresh indicator next to the connection status */}
+            <RefreshIndicator />
+        </div>
         <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
           {isConnected ? '● Connected' : '○ Disconnected'}
         </div>

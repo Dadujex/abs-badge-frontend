@@ -1,0 +1,40 @@
+/* src/RefreshIndicator.css */
+.refresh-indicator {
+    width: 18px; /* Size of the circle */
+    height: 18px;
+    border-radius: 50%; /* Make it a circle */
+    border: 2px solid #ccc; /* Outer border */
+    position: relative; /* Needed for absolute positioning of the fill */
+    overflow: hidden; /* Hide the part of the fill outside the circle */
+    background-color: #f0f0f0; /* Background when empty */
+    margin-left: 10px; /* Space it from the connection status */
+  }
+  
+  .refresh-indicator-fill {
+    width: 100%;
+    height: 100%;
+    background-color: #3498db; /* Color of the fill */
+    position: absolute;
+    bottom: 0; /* Start filling from the bottom */
+    left: 0;
+    /* Apply the animation */
+    animation: fillUp 5s linear infinite; /* Name, duration, timing, iteration */
+    transform-origin: bottom; /* Animate height from the bottom */
+    transform: scaleY(0); /* Start empty */
+  }
+  
+  /* Define the animation keyframes */
+  @keyframes fillUp {
+    0% {
+      transform: scaleY(0); /* Start empty */
+      opacity: 0.8;
+    }
+    95% {
+      transform: scaleY(1); /* Fill completely */
+      opacity: 1;
+    }
+    100% {
+        transform: scaleY(1);
+        opacity: 0; /* Briefly disappear before restarting */
+    }
+  }
