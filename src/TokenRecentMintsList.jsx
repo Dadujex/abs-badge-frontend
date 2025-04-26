@@ -60,7 +60,7 @@ function TokenRecentMintsList({ tokenId, tokenName, mints = [], shortenAddress, 
             <span className="mint-recipient" title={mint.recipientAddress}>
               {mint.recipientAddress ? `To: ${shortenAddress(mint.recipientAddress)}` : 'Recipient N/A'}
             </span>
-            <a href={mint.transactionHash ? `${abscanTxBaseUrl}/${mint.transactionHash}` : '#'}>
+            <a href={mint.transactionHash ? `${abscanTxBaseUrl}/${mint.transactionHash}` : '#'} target='_blank'>
               <span className="mint-time" title={mint.timestamp.toLocaleString()}>
                 {/* Format time nicely */}
                 {formatTimeAgo(mint.timestamp)}
