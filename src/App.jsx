@@ -94,19 +94,19 @@ function App() {
 
       setRecentMintsByToken(prevMap => {
         const newMintInfo = {
-          id: `${updateData.tokenId}-${updateData.recipientAddress}-${Date.now()}`, // Unique key
-          recipientAddress: updateData.recipientAddress,
+          id: `${updatedToken.tokenId}-${updatedToken.recipientAddress}-${Date.now()}`, // Unique key
+          recipientAddress: updatedToken.recipientAddress,
           timestamp: new Date()
         };
 
         // Get current list for this token, or initialize if new
-        const currentMints = prevMap.get(updateData.tokenId) || [];
+        const currentMints = prevMap.get(updatedToken.tokenId) || [];
         // Add new mint to the start and slice to keep only the last N
         const updatedMintsForToken = [newMintInfo, ...currentMints].slice(0, MAX_RECENT_MINTS_PER_TOKEN);
 
         // Create a new map to trigger state update
         const newMap = new Map(prevMap);
-        newMap.set(updateData.tokenId, updatedMintsForToken);
+        newMap.set(updatedToken.tokenId, updatedMintsForToken);
         return newMap;
       });
     });
