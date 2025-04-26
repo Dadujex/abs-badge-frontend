@@ -84,9 +84,9 @@ function App() {
 
       setRecentMints(prevMints => {
         const newMint = {
-          id: `<span class="math-inline">\{updateData\.tokenId\}\-</span>{updateData.recipientAddress}-${Date.now()}`,
-          tokenId: updateData.tokenId,
-          recipientAddress: updateData.recipientAddress, // Get recipient from payload
+          id: `<span class="math-inline">\{updatedToken\.tokenId\}\-</span>{updatedToken.recipientAddress}-${Date.now()}`,
+          tokenId: updatedToken.tokenId,
+          recipientAddress: updatedToken.recipientAddress, // Get recipient from payload
           timestamp: new Date()
         }
         const updatedMints = [newMint, ...prevMints].slice(0, MAX_RECENT_MINTS);
