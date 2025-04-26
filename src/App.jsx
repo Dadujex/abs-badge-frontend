@@ -205,25 +205,6 @@ function App() {
         {error && <p className="error-message">{error}</p>}
       </header>
 
-      <section className="counter-section">
-        <div className="counter-item">
-            <span className="counter-value">{mintCountsByWindow.min1.toLocaleString()}</span>
-            <span className="counter-label">Mints (1m)</span>
-        </div>
-         <div className="counter-item">
-            <span className="counter-value">{mintCountsByWindow.min5.toLocaleString()}</span>
-            <span className="counter-label">Mints (5m)</span>
-        </div>
-         <div className="counter-item">
-            <span className="counter-value">{mintCountsByWindow.min15.toLocaleString()}</span>
-            <span className="counter-label">Mints (15m)</span>
-        </div>
-         <div className="counter-item">
-            <span className="counter-value">{mintCountsByWindow.min30.toLocaleString()}</span>
-            <span className="counter-label">Mints (30m)</span>
-        </div>
-      </section>
-
       <div className='main-layout'>
         <section className="data-display-section">
           <main>

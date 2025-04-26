@@ -125,39 +125,7 @@ td:nth-child(1), td:nth-child(3) { text-align: right; font-feature-settings: "tn
 .display-desktop { display: none; }
 .display-mobile { display: block; }
 /* .recent-mints-grid already defaults to 1 column */
-.counter-section {
-    display: flex;
-    justify-content: space-around; /* Distribute items evenly */
-    align-items: center;
-    background-color: #ecf0f1; /* Light background */
-    padding: 1rem 0.5rem;
-    border-radius: 6px;
-    margin-bottom: 2rem; /* Space below counters */
-    flex-wrap: wrap; /* Allow wrapping on small screens */
-    gap: 1rem; /* Space between items when wrapped */
-}
 
-.counter-item {
-    display: flex;
-    flex-direction: column; /* Stack value and label */
-    align-items: center;
-    text-align: center;
-    min-width: 80px; /* Minimum width for each counter */
-}
-
-.counter-value {
-    font-size: 1.6rem;
-    font-weight: bold;
-    color: #2c3e50; /* Dark blue */
-    line-height: 1.1;
-}
-
-.counter-label {
-    font-size: 0.8rem;
-    color: #7f8c8d; /* Grey */
-    margin-top: 0.2rem;
-    text-transform: uppercase;
-}
 
 /* Medium screens (e.g., tablets) - Show chart, 2 columns for mints */
 @media (min-width: 768px) {
@@ -185,7 +153,5 @@ td:nth-child(1), td:nth-child(3) { text-align: right; font-feature-settings: "tn
     .token-mints-sublist li { font-size: 0.8rem; padding: 0.3rem 0.1rem; }
     .token-recent-mints-item { padding: 0.6rem; }
 
-    .counter-value { font-size: 1.3rem; }
-    .counter-label { font-size: 0.7rem; }
-    .counter-section { padding: 0.8rem 0.3rem; }
+    
 }
