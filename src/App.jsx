@@ -8,7 +8,6 @@ import './App.css'; // Styles will handle hiding/showing
 // --- Configuration ---
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const TOP_N_TOKENS_TO_DISPLAY = 30; // How many tokens to show
-const API_KEY = import.meta.env.VITE_API_SECRET_KEY;
 
 function App() {
   const [tokenCounts, setTokenCounts] = useState([]);
@@ -22,23 +21,8 @@ function App() {
     setError(null);
     const apiUrl = `${BACKEND_URL}/api/token-counts`;
 
-    const requestHeaders = new Headers();
-    // Only add the header if the API_KEY is actually present
-    if (API_KEY) {
-        requestHeaders.append('X-API-Key', API_KEY);
-    } else {
-        // Handle missing API key - crucial for production
-        console.error("API Key is missing! Cannot authenticate API request.");
-        setError("Configuration error: Frontend API Key is missing. Deployment requires VITE_API_SECRET_KEY.");
-        setIsLoading(false);
-        return; // Stop fetching if key is missing
-    }
-
     try {
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: requestHeaders,
-      });
+      const response = await fetch(apiUrl);
 
       const headers = {};
       response.headers.forEach((value, key) => { headers[key] = value; });
@@ -52,6 +36,7 @@ function App() {
       const data = await response.json();
 
       if (!Array.isArray(data)) {
+          console.error("Parsed data is not an array:", data);
           throw new Error("Invalid data format received from API.");
       }
 
