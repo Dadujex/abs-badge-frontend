@@ -8,12 +8,15 @@ import './App.css'; // Styles will handle hiding/showing
 // --- Configuration ---
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const TOP_N_TOKENS_TO_DISPLAY = 30; // How many tokens to show
+const MAX_RECENT_MINTS = 10; // How many recent mints to show
+const ABSCAN_NFT_URL_BASE = "https://abscan.org/nft/0xbc176ac2373614f9858a118917d83b139bcb3f8c";
 
 function App() {
   const [tokenCounts, setTokenCounts] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [recentMints, setRecentMints] = useState([]);
 
   // --- Fetch Initial Data (Keep as before) ---
   const fetchInitialData = useCallback(async () => {
@@ -78,10 +81,26 @@ function App() {
         newCounts.sort((a, b) => b.mint_count - a.mint_count);
         return newCounts;
       });
+
+      setRecentMints(prevMints => {
+        const newMint = {
+          id: `<span class="math-inline">\{updateData\.tokenId\}\-</span>{updateData.recipientAddress}-${Date.now()}`,
+          tokenId: updateData.tokenId,
+          recipientAddress: updateData.recipientAddress, // Get recipient from payload
+          timestamp: new Date()
+        }
+        const updatedMints = [newMint, ...prevMints].slice(0, MAX_RECENT_MINTS);
+        return updatedMints;
+      })
     });
 
     return () => { socket.disconnect(); setIsConnected(false); };
   }, [error]);
+
+  const shortenAddress = (address) => {
+    if (!address || address.length < 10) return address || ''; // Handle null/short addresses
+    return `<span class="math-inline">\{address\.substring\(0, 6\)\}\.\.\.</span>{address.substring(address.length - 4)}`;
+  }
 
   return (
     <div className="App">
@@ -93,28 +112,64 @@ function App() {
         {error && <p className="error-message">{error}</p>}
       </header>
 
-      <main>
-        {isLoading ? (
-          <p>Loading initial token counts...</p>
-        ) : (
-          <> {/* Use Fragment to return multiple elements */}
-            {tokenCounts.length > 0 ? (
-              <>
-                {/* Chart Container - Hidden on mobile */}
-                <div className="chart-container display-desktop">
-                  <TokenChart tokenData={tokenCounts} topN={TOP_N_TOKENS_TO_DISPLAY} />
-                </div>
-                {/* Table Container - Hidden on desktop */}
-                <div className="table-container display-mobile">
-                   <TokenTable tokenData={tokenCounts} topN={TOP_N_TOKENS_TO_DISPLAY} />
-                </div>
-              </>
+      <div className='main-layout'>
+        <section className="data-display-section">
+          <main>
+            {isLoading ? (
+              <p>Loading initial token counts...</p>
             ) : (
-              !error && <p>No token data available yet.</p>
+              <> {/* Use Fragment to return multiple elements */}
+                {tokenCounts.length > 0 ? (
+                  <>
+                    {/* Chart Container - Hidden on mobile */}
+                    <div className="chart-container display-desktop">
+                      <TokenChart tokenData={tokenCounts} topN={TOP_N_TOKENS_TO_DISPLAY} />
+                    </div>
+                    {/* Table Container - Hidden on desktop */}
+                    <div className="table-container display-mobile">
+                      <TokenTable tokenData={tokenCounts} topN={TOP_N_TOKENS_TO_DISPLAY} />
+                    </div>
+                  </>
+                ) : (
+                  !error && <p>No token data available yet.</p>
+                )}
+              </>
             )}
-          </>
-        )}
-      </main>
+          </main>
+        </section>
+        <aside className="recent-mints-section">
+          <h2>Recent Mints</h2>
+          {recentMints.length > 0 ? (
+            <ul className="recent-mints-list">
+              {recentMints.map((mint) => (
+                <li key={mint.id}>
+                  {/* Display Recipient Address */}
+                  <span className="mint-recipient" title={mint.recipientAddress}>
+                    {mint.recipientAddress ? `To: ${shortenAddress(mint.recipientAddress)}` : 'Recipient N/A'}
+                  </span>
+                  {/* Display Token ID as a Link */}
+                  <span className="mint-token">
+                    <a
+                      href={`<span class="math-inline">\{ABSCAN\_NFT\_URL\_BASE\}/</span>{mint.tokenId}`}
+                      target="_blank" // Open in new tab
+                      rel="noopener noreferrer" // Security best practice
+                      title={`View Token ID ${mint.tokenId} on AbsScan`}
+                    >
+                      Token #{mint.tokenId}
+                    </a>
+                  </span>
+                  <span className="mint-time">
+                    {mint.timestamp.toLocaleTimeString()}
+                  </span> 
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="no-mints-message">{isConnected ? 'Waiting for new mints...' : 'Connect to see recent mints.'}</p>
+          )}
+        </aside>
+      </div>
+      
     </div>
   );
 }
