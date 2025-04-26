@@ -153,16 +153,21 @@ function App() {
         if (!isNaN(newTimestamp)) { // Check if parsing was successful
             setAllRecentTimestamps(prevTimestamps => {
                 const nowForFilter = Date.now();
+                // Define cutoff based on TTL (e.g., 30 minutes ago)
                 const cutoffTime = nowForFilter - TIMESTAMP_TTL_MS;
                 // Add new timestamp and filter out old ones in one go
                 // Prepend the new timestamp
                 const updatedTimestamps = [newTimestamp, ...prevTimestamps]
-                    .filter(ts => ts.getTime() >= cutoffTime);
+                    .filter(ts => ts.getTime() >= cutoffTime); // Keep only timestamps within TTL
                 // No need to sort here if we always prepend
                 return updatedTimestamps;
             });
+        } else {
+            console.warn("Received invalid timestamp in tokenUpdate:", updateData.timestamp);
         }
-      } 
+    } else {
+        console.warn("Received tokenUpdate without timestamp:", updateData);
+    }
     });
 
     return () => { socket.disconnect(); setIsConnected(false); };
