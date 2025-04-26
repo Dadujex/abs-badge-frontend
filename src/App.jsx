@@ -78,6 +78,8 @@ function App() {
           }
       }
 
+      setRecentMintsByToken(initialMintsMap);
+
     } catch (err) {
       console.error("Failed during fetch or parsing",);
       setError(`Could not load initial token data.`);
