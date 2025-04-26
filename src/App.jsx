@@ -5,6 +5,7 @@ import TokenChart from './TokenChart'; // Import the chart component
 import TokenTable from './TokenTable'; // Import the new table component
 import './App.css'; // Styles will handle hiding/showing
 import TokenRecentMintsList from './TokenRecentMintsList';
+import RefreshIndicator from './Refreshindicator';
 
 // --- Configuration ---
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
