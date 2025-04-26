@@ -62,24 +62,19 @@ function App() {
       const initialMintsMap = new Map();
       let parsedMintsCount = 0;
       for (const tokenId in initialMintsObject) {
-          // Check if the key is directly on the object (safer loop)
-          if (Object.hasOwnProperty.call(initialMintsObject, tokenId)) {
-              // Convert timestamp strings back to Date objects
-              // Ensure the mint array exists and is an array
-              const mintsArray = initialMintsObject[tokenId];
-              if (Array.isArray(mintsArray)) {
-                  const mintsWithDates = mintsArray.map(mint => {
-                      parsedMintsCount++;
-                      return {
-                          ...mint,
-                          // Ensure timestamp exists before trying to parse
-                          timestamp: mint.timestamp ? new Date(mint.timestamp) : new Date() // Fallback to now if missing
-                      };
-                  }).sort((a, b) => b.timestamp - a.timestamp); // Ensure sorted descending by time
-                  initialMintsMap.set(tokenId, mintsWithDates);
-              } else {
-                  console.warn(`Expected array for initialRecentMints[${tokenId}], but got:`, mintsArray);
-              }
+          const mintsArray = initialMintsObject[tokenId];
+          if (Array.isArray(mintsArray)) {
+              const mintsWithDates = mintsArray.map(mint => {
+                  parsedMintsCount++;
+                  return {
+                      ...mint,
+                      // Ensure timestamp exists before trying to parse
+                      timestamp: mint.timestamp ? new Date(mint.timestamp) : new Date() // Fallback to now if missing
+                  };
+              }).sort((a, b) => b.timestamp - a.timestamp); // Ensure sorted descending by time
+              initialMintsMap.set(tokenId, mintsWithDates);
+          } else {
+              console.warn(`Expected array for initialRecentMints[${tokenId}], but got:`, mintsArray);
           }
       }
 
