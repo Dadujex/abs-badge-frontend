@@ -93,6 +93,33 @@ function App() {
       initialTimestamps.sort((a, b) => b.timestamp - a.timestamp); // Sort newest first (optional but good practice)
       setAllRecentTimestamps(initialTimestamps);
 
+      const oneMinuteAgo = nowForFilter - (1 * 60 * 1000);
+      const fiveMinutesAgo = nowForFilter - (5 * 60 * 1000);
+      const fifteenMinutesAgo = nowForFilter - (15 * 60 * 1000);
+      // Use cutoffTime for the 30 min boundary, matching the filter
+      const thirtyMinutesAgo = cutoffTime;
+
+      let initialCount1 = 0, initialCount5 = 0, initialCount15 = 0, initialCount30 = 0;
+
+      // Use the 'initialTimestamps' array we just created
+      for (const ts of initialTimestamps) {
+        if (ts instanceof Date && !isNaN(ts)) {
+            const time = ts.getTime();
+            if (time >= oneMinuteAgo) initialCount1++;
+            if (time >= fiveMinutesAgo) initialCount5++;
+            if (time >= fifteenMinutesAgo) initialCount15++;
+            // Count everything remaining after the initial filter for 30m
+            initialCount30++;
+        }
+      }
+      const initialCounts = {
+          min1: initialCount1,
+          min5: initialCount5,
+          min15: initialCount15,
+          min30: initialCount30
+      };
+      setMintCountsByWindow(initialCounts);
+
     } catch (err) {
       console.error("Failed during fetch or parsing",);
       setError(`Could not load initial token data.`);
