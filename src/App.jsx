@@ -40,22 +40,48 @@ function App() {
       const responseText = await clonedResponse.text();
       const data = await response.json();
 
-      if (!Array.isArray(data)) {
-          console.error("Parsed data is not an array:", data);
-          throw new Error("Invalid data format received from API.");
+      if (!data || !Array.isArray(data.tokenCounts) || typeof data.initialRecentMints !== 'object') {
+        console.error("Invalid response structure received:", data);
+        throw new Error("Invalid data structure received from API.");
       }
 
-      data.sort((a, b) => b.mint_count - a.mint_count);
-      setTokenCounts(data);
+      const countsData = data.tokenCounts;
+      countsData.sort((a, b) => b.mint_count - a.mint_count);
+      setTokenCounts(countsData);
 
       const metadataMap = new Map();
-      data.forEach(token => {
+      countsData.forEach(token => {
           // Only add if a name exists and is not just whitespace
           if (token.name?.trim()) {
               metadataMap.set(token.tokenId, token.name.trim());
           }
       });
       setTokenMetadata(metadataMap);
+
+      const initialMintsObject = data.initialRecentMints;
+      const initialMintsMap = new Map();
+      let parsedMintsCount = 0;
+      for (const tokenId in initialMintsObject) {
+          // Check if the key is directly on the object (safer loop)
+          if (Object.hasOwnProperty.call(initialMintsObject, tokenId)) {
+              // Convert timestamp strings back to Date objects
+              // Ensure the mint array exists and is an array
+              const mintsArray = initialMintsObject[tokenId];
+              if (Array.isArray(mintsArray)) {
+                  const mintsWithDates = mintsArray.map(mint => {
+                      parsedMintsCount++;
+                      return {
+                          ...mint,
+                          // Ensure timestamp exists before trying to parse
+                          timestamp: mint.timestamp ? new Date(mint.timestamp) : new Date() // Fallback to now if missing
+                      };
+                  }).sort((a, b) => b.timestamp - a.timestamp); // Ensure sorted descending by time
+                  initialMintsMap.set(tokenId, mintsWithDates);
+              } else {
+                  console.warn(`Expected array for initialRecentMints[${tokenId}], but got:`, mintsArray);
+              }
+          }
+      }
 
     } catch (err) {
       console.error("Failed during fetch or parsing",);
