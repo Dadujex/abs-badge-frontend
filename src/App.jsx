@@ -1,5 +1,5 @@
 // src/App.jsx (Updated for Responsive Display)
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import io from 'socket.io-client';
 import TokenChart from './TokenChart'; // Import the chart component
 import TokenTable from './TokenTable'; // Import the new table component
