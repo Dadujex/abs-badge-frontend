@@ -202,14 +202,13 @@ function App() {
             const currentTimestamps = allRecentTimestamps;
 
             for (const ts of currentTimestamps) {
-              // Ensure ts is a valid Date object before calling getTime
+              console.log(ts instanceof Date)
               if (ts instanceof Date && !isNaN(ts)) {
                   const time = ts.getTime();
-                  // Check against pre-calculated boundaries
+
                   if (time >= oneMinuteAgo) count1++;
                   if (time >= fiveMinutesAgo) count5++;
                   if (time >= fifteenMinutesAgo) count15++;
-                  // Count if it's within the 30-minute TTL window (already filtered)
                   if (time >= thirtyMinutesAgo) count30++;
               }
             }
