@@ -94,6 +94,7 @@ function App() {
           .filter(ts => !isNaN(ts) && ts.getTime() >= cutoffTime); // Filter out invalid/old dates
       initialTimestamps.sort((a, b) => b.timestamp - a.timestamp); // Sort newest first (optional but good practice)
       setAllRecentTimestamps(initialTimestamps);
+      allRecentTimestampsRef.current = initialTimestamps;
 
       const oneMinuteAgo = nowForFilter - (1 * 60 * 1000);
       const fiveMinutesAgo = nowForFilter - (5 * 60 * 1000);
