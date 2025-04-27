@@ -211,7 +211,7 @@ function App() {
       let count1 = 0, count5 = 0, count15 = 0, count30 = 0;
 
       // Read directly from the state variable `allRecentTimestamps`
-      const currentTimestamps = allRecentTimestamps.current;
+      const currentTimestamps = allRecentTimestampsRef.current;
 
       for (const ts of currentTimestamps) {
         // Ensure ts is a valid Date object before calling getTime
