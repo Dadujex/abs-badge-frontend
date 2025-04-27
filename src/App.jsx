@@ -24,6 +24,8 @@ function App() {
   const [allRecentTimestamps, setAllRecentTimestamps] = useState([]);
   const [mintCountsByWindow, setMintCountsByWindow] = useState({ min1: 0, min5: 0, min15: 0, min30: 0 });
 
+  const allRecentTimestampsRef = useRef(allRecentTimestamps);
+
   // --- Fetch Initial Data (Keep as before) ---
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
@@ -187,6 +189,7 @@ function App() {
                 const updatedTimestamps = [newTimestamp, ...prevTimestamps]
                     .filter(ts => ts.getTime() >= cutoffTime); // Keep only timestamps within TTL
                 // No need to sort here if we always prepend
+                allRecentTimestampsRef.current = updatedTimestamps;
                 return updatedTimestamps;
             });
         } 
@@ -208,7 +211,7 @@ function App() {
       let count1 = 0, count5 = 0, count15 = 0, count30 = 0;
 
       // Read directly from the state variable `allRecentTimestamps`
-      const currentTimestamps = allRecentTimestamps;
+      const currentTimestamps = allRecentTimestamps.current;
 
       for (const ts of currentTimestamps) {
         // Ensure ts is a valid Date object before calling getTime
