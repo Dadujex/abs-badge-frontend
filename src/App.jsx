@@ -189,35 +189,8 @@ function App() {
                 // No need to sort here if we always prepend
                 return updatedTimestamps;
             });
-
-            const now = Date.now();
-            const oneMinuteAgo = now - (1 * 60 * 1000);
-            const fiveMinutesAgo = now - (5 * 60 * 1000);
-            const fifteenMinutesAgo = now - (15 * 60 * 1000);
-            const thirtyMinutesAgo = now - TIMESTAMP_TTL_MS; // Use TTL as boundary
-
-            let count1 = 0, count5 = 0, count15 = 0, count30 = 0;
-
-            // Read directly from the state variable `allRecentTimestamps`
-            const currentTimestamps = allRecentTimestamps;
-
-            for (const ts of currentTimestamps) {
-              console.log(ts instanceof Date)
-              if (ts instanceof Date && !isNaN(ts)) {
-                  const time = ts.getTime();
-
-                  if (time >= oneMinuteAgo) count1++;
-                  if (time >= fiveMinutesAgo) count5++;
-                  if (time >= fifteenMinutesAgo) count15++;
-                  if (time >= thirtyMinutesAgo) count30++;
-              }
-            }
-
-            // Update the state with the new counts
-            const newCounts = { min1: count1, min5: count5, min15: count15, min30: count30 };
-              setMintCountsByWindow(newCounts);
-            } 
         } 
+      } 
     });
 
     return () => { socket.disconnect(); setIsConnected(false); };
@@ -259,7 +232,7 @@ function App() {
     // Cleanup interval on component unmount
     return () => { console.log("Clearing counter interval..."); clearInterval(intervalId); }
 
-  }, [allRecentTimestamps]); // Re-run calculation IF the timestamp list state changes
+  }, []); // Re-run calculation IF the timestamp list state changes
 
   const shortenAddress = (address) => {
     if (!address || address.length < 10) return address || ''; // Handle null/short addresses
