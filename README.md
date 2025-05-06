@@ -1,12 +1,24 @@
-# React + Vite
+# Badge Count Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![Deployed on Vercel](https://img.shields.io/badge/deployed%20on-vercel-black)](https://badge-count.vercel.app/)
 
-Currently, two official plugins are available:
+A modern web application for tracking and displaying badge counts across various platforms. This project provides a clean, intuitive interface for users to monitor their achievement badges.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Live Demo
 
-## Expanding the ESLint configuration
+Visit the live application: [https://badge-count.vercel.app/](https://badge-count.vercel.app/)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ✨ Features
+
+- **Real-time Badge Tracking**: Monitor badge counts across multiple platforms
+- **Responsive Design**: Fully optimized for desktop and mobile devices
+- **Interactive Dashboard**: Visual representation of badge statistics
+
+## 🛠️ Technologies Used
+
+- **Frontend Framework**: React
+- **Styling**: Tailwind CSS
+- **Deployment**: Vercel
+- **Data Communications**:
+    - REST API for standard CRUD operations
+    - WebSockets for real-time updates
